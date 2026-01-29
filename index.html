@@ -32,14 +32,18 @@
         const supabaseKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InBrcnlqdGpzYWFqYWxxcXp6b3lrIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Njk2MDgwMjYsImV4cCI6MjA4NTE4NDAyNn0.v8_aUSCd_D0Zqtiq5bGSrkhMRHCQI2e-Lyq1i6Mpqjs'; 
         const _supabase = supabase.createClient(supabaseUrl, supabaseKey);
 
-        window.onload = () => {
+       window.onload = () => {
             setTimeout(() => {
                 const splash = document.getElementById('splash');
                 const main = document.getElementById('main');
+                
+                // 1. 스플래시를 투명하게 만듭니다
                 splash.style.opacity = '0';
+                
                 setTimeout(() => {
+                    // 2. 스플래시를 제거하고 숨겨진 메인 화면을 활성화합니다
                     splash.style.display = 'none';
-                    main.style.display = 'block';
+                    main.style.display = 'block'; 
                 }, 1000);
             }, 2000);
         };
