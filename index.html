@@ -8,30 +8,27 @@
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <style>
         :root { --main-color: #FF6B6B; }
-        body { margin: 0; font-family: 'Noto Sans KR', sans-serif; background-color: #f8f9fa; color: #333; }
+        body { margin: 0; font-family: 'Noto Sans KR', sans-serif; background-color: #f8f9fa; }
         #splash { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: white; display: flex; flex-direction: column; justify-content: center; align-items: center; z-index: 1000; transition: opacity 1s ease; }
-        #main { display: none; max-width: 600px; margin: 0 auto; padding: 20px; }
-        
-        /* 헤더 스타일 */
-        .header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 30px; }
-        .lang-group { display: flex; gap: 5px; }
-        .lang-btn { padding: 4px 8px; font-size: 11px; cursor: pointer; border: 1px solid #ddd; border-radius: 6px; background: white; transition: 0.3s; }
-        .lang-btn:hover { background: #eee; }
+        #main { display: none; max-width: 600px; margin: 0 auto; padding: 20px; text-align: center; }
+        .header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; }
+        .lang-btn { padding: 4px 8px; font-size: 11px; cursor: pointer; border: 1px solid #ddd; border-radius: 6px; background: white; }
         .lang-btn.active { background: var(--main-color); color: white; border-color: var(--main-color); }
-
         .card { background: white; padding: 20px; border-radius: 20px; box-shadow: 0 4px 12px rgba(0,0,0,0.05); margin-bottom: 20px; }
         .btn-record { width: 100%; padding: 18px; background: linear-gradient(135deg, var(--main-color), #FF8E8E); color: white; border: none; border-radius: 15px; font-size: 18px; font-weight: bold; cursor: pointer; }
-        .history-item { border-bottom: 1px solid #eee; padding: 12px 0; display: flex; justify-content: space-between; font-size: 14px; }
+        .history-item { border-bottom: 1px solid #eee; padding: 15px 0; display: flex; gap: 15px; align-items: center; text-align: left; }
+        .history-img { width: 65px; height: 65px; border-radius: 12px; object-fit: cover; background: #eee; }
     </style>
 </head>
 <body>
     <div id="splash">
-        <img src="https://pkryjtjsaajalqqzzoyk.supabase.co/storage/v1/object/public/growth-report-illust/family-illust.png" style="width: 250px;">
+        <img src="https://pkryjtjsaajalqqzzoyk.supabase.co/storage/v1/object/public/growth-report-illust/family-illust.png" style="width: 280px; margin-bottom: 20px;">
+        <h2 id="s-title" style="color:#333;">우리아이 성장보고서</h2>
     </div>
 
     <div id="main">
         <div class="header">
-            <h2 id="t-dash" style="margin:0; font-size: 20px;">실시간 대시보드</h2>
+            <h2 id="t-dash" style="margin:0; font-size: 18px;">실시간 대시보드</h2>
             <div class="lang-group">
                 <button class="lang-btn active" id="btn-ko" onclick="setLang('ko')">KO</button>
                 <button class="lang-btn" id="btn-en" onclick="setLang('en')">EN</button>
@@ -39,71 +36,91 @@
             </div>
         </div>
         
-        <div class="card">
-            <canvas id="growthChart"></canvas>
-        </div>
+        <div class="card"><canvas id="growthChart"></canvas></div>
 
-        <button class="btn-record" id="t-btn" onclick="addLog()">오늘의 기록 추가</button>
+        <input type="file" id="photo-input" accept="image/*" style="display:none;">
+        <button class="btn-record" onclick="document.getElementById('photo-input').click()">📸 <span id="t-btn">오늘의 기록 & 사진 추가</span></button>
 
         <div class="card" style="margin-top:20px;">
-            <h3 id="t-history" style="margin-top:0;">최근 기록</h3>
+            <h3 id="t-history" style="margin:0 0 15px 0; text-align: left;">최근 기록</h3>
             <div id="history-list"></div>
         </div>
     </div>
 
     <script>
         const supabaseUrl = 'https://pkryjtjsaajalqqzzoyk.supabase.co';
-        const supabaseKey = '사장님의_실제_anon_키'; // ★이곳에 실제 키를 꼭 유지하세요!
+        const supabaseKey = '사장님의_실제_anon_키'; // ★여기에 사장님의 실제 키를 꼭 넣어주세요!
         const _supabase = supabase.createClient(supabaseUrl, supabaseKey);
 
         let currentLang = 'ko';
         const i18n = {
-            ko: { dash: "실시간 대시보드", btn: "오늘의 기록 추가", history: "최근 기록", h: "키", w: "몸무게", success: "기록 성공!", promptH: "아이의 키(cm):", promptW: "아이의 몸무게(kg):" },
-            en: { dash: "Dashboard", btn: "Add New Record", history: "Recent Records", h: "Height", w: "Weight", success: "Saved Successfully!", promptH: "Height(cm):", promptW: "Weight(kg):" },
-            ja: { dash: "ダッシュボード", btn: "新しい記録を追加", history: "最近の履歴", h: "身長", w: "体重", success: "記録に成功しました！", promptH: "身長(cm):", promptW: "体重(kg):" }
+            ko: { s: "우리아이 성장보고서", dash: "실시간 대시보드", btn: "오늘의 기록 & 사진 추가", history: "최근 기록", h: "키(cm)", w: "몸무게(kg)", success: "저장 완료! ✨" },
+            en: { s: "Growth Report", dash: "Dashboard", btn: "Add Record & Photo", history: "History", h: "Height(cm)", w: "Weight(kg)", success: "Saved! ✨" },
+            ja: { s: "成長報告書", dash: "ダッシュボード", btn: "記録と写真を追加", history: "履歴", h: "身長(cm)", w: "体重(kg)", success: "完了！ ✨" }
         };
 
         function setLang(lang) {
             currentLang = lang;
+            document.getElementById('s-title').innerText = i18n[lang].s;
             document.getElementById('t-dash').innerText = i18n[lang].dash;
             document.getElementById('t-btn').innerText = i18n[lang].btn;
             document.getElementById('t-history').innerText = i18n[lang].history;
-            
-            // 버튼 활성화 표시
-            document.querySelectorAll('.lang-btn').forEach(btn => btn.classList.remove('active'));
+            document.querySelectorAll('.lang-btn').forEach(b => b.classList.remove('active'));
             document.getElementById(`btn-${lang}`).classList.add('active');
-            
-            loadData(); // 언어 변경 시 그래프 레이블 업데이트를 위해 리로드
+            loadData();
         }
 
         window.onload = () => {
             setTimeout(() => {
-                document.getElementById('splash').style.opacity = '0';
+                const sp = document.getElementById('splash');
+                const mn = document.getElementById('main');
+                sp.style.opacity = '0';
                 setTimeout(() => {
-                    document.getElementById('splash').style.display = 'none';
-                    document.getElementById('main').style.display = 'block';
+                    sp.style.display = 'none';
+                    mn.style.display = 'block';
                     loadData();
                 }, 1000);
-            }, 2000);
+            }, 2500);
+        };
+
+        document.getElementById('photo-input').onchange = async (e) => {
+            const file = e.target.files[0];
+            if (!file) return;
+
+            const h = prompt(i18n[currentLang].h);
+            const w = prompt(i18n[currentLang].w);
+
+            if (h && w) {
+                let photoUrl = '';
+                const fileName = `${Date.now()}_img`;
+                const { data: upData } = await _supabase.storage.from('community-images').upload(fileName, file); //
+                
+                if (upData) {
+                    const { data } = _supabase.storage.from('community-images').getPublicUrl(fileName);
+                    photoUrl = data.publicUrl;
+                }
+
+                await _supabase.from('growth_logs').insert([{ height: parseFloat(h), weight: parseFloat(w), photo_url: photoUrl }]); //
+                alert(i18n[currentLang].success);
+                loadData();
+            }
         };
 
         async function loadData() {
             const { data } = await _supabase.from('growth_logs').select('*').order('created_at', { ascending: true });
             if (data) {
-                renderList(data);
+                const listDiv = document.getElementById('history-list');
+                listDiv.innerHTML = [...data].reverse().map(item => `
+                    <div class="history-item">
+                        <img src="${item.photo_url || 'https://via.placeholder.com/65'}" class="history-img">
+                        <div>
+                            <div style="font-size: 11px; color:#888;">${new Date(item.created_at).toLocaleDateString()}</div>
+                            <div style="font-weight:bold;">${item.height}cm / ${item.weight}kg</div>
+                        </div>
+                    </div>
+                `).join('');
                 renderChart(data);
             }
-        }
-
-        function renderList(data) {
-            const listDiv = document.getElementById('history-list');
-            const sortedData = [...data].reverse();
-            listDiv.innerHTML = sortedData.map(item => `
-                <div class="history-item">
-                    <span>${new Date(item.created_at).toLocaleDateString()}</span>
-                    <span><b>${item.height}cm / ${item.weight}kg</b></span>
-                </div>
-            `).join('');
         }
 
         let myChart;
@@ -114,8 +131,10 @@
                 type: 'line',
                 data: {
                     labels: data.map(d => new Date(d.created_at).toLocaleDateString()),
-                    datasets: [{
-                        label: `${i18n[currentLang].h} (cm)`,
-                        data: data.map(d => d.height),
-                        borderColor: '#FF6B6B',
-                        backgroundColor: 'rgba(25
+                    datasets: [{ label: i18n[currentLang].h, data: data.map(d => d.height), borderColor: '#FF6B6B', tension: 0.3 }]
+                }
+            });
+        }
+    </script>
+</body>
+</html>
