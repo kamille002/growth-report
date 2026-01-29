@@ -11,26 +11,33 @@
         body { margin: 0; font-family: 'Noto Sans KR', sans-serif; background-color: #f8f9fa; color: #333; }
         #splash { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: white; display: flex; flex-direction: column; justify-content: center; align-items: center; z-index: 1000; transition: opacity 1s ease; }
         #main { display: none; max-width: 600px; margin: 0 auto; padding: 20px; }
+        
+        /* 헤더 스타일 */
+        .header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 30px; }
+        .lang-group { display: flex; gap: 5px; }
+        .lang-btn { padding: 4px 8px; font-size: 11px; cursor: pointer; border: 1px solid #ddd; border-radius: 6px; background: white; transition: 0.3s; }
+        .lang-btn:hover { background: #eee; }
+        .lang-btn.active { background: var(--main-color); color: white; border-color: var(--main-color); }
+
         .card { background: white; padding: 20px; border-radius: 20px; box-shadow: 0 4px 12px rgba(0,0,0,0.05); margin-bottom: 20px; }
         .btn-record { width: 100%; padding: 18px; background: linear-gradient(135deg, var(--main-color), #FF8E8E); color: white; border: none; border-radius: 15px; font-size: 18px; font-weight: bold; cursor: pointer; }
-        .lang-btn { padding: 5px 10px; font-size: 12px; cursor: pointer; border: 1px solid #ddd; border-radius: 5px; background: white; }
-        #history-list { list-style: none; padding: 0; text-align: left; }
-        .history-item { border-bottom: 1px solid #eee; padding: 10px 0; display: flex; justify-content: space-between; }
+        .history-item { border-bottom: 1px solid #eee; padding: 12px 0; display: flex; justify-content: space-between; font-size: 14px; }
     </style>
 </head>
 <body>
     <div id="splash">
-        <img src="https://pkryjtjsaajalqqzzoyk.supabase.co/storage/v1/object/public/growth-report-illust/family-illust.png" style="width: 250px; margin-bottom: 15px;">
-        <h2 id="t-title">우리아이 성장보고서</h2>
-        <div style="margin-top: 10px;">
-            <button class="lang-btn" onclick="setLang('ko')">KO</button>
-            <button class="lang-btn" onclick="setLang('en')">EN</button>
-            <button class="lang-btn" onclick="setLang('ja')">JA</button>
-        </div>
+        <img src="https://pkryjtjsaajalqqzzoyk.supabase.co/storage/v1/object/public/growth-report-illust/family-illust.png" style="width: 250px;">
     </div>
 
     <div id="main">
-        <h2 id="t-dash">실시간 대시보드</h2>
+        <div class="header">
+            <h2 id="t-dash" style="margin:0; font-size: 20px;">실시간 대시보드</h2>
+            <div class="lang-group">
+                <button class="lang-btn active" id="btn-ko" onclick="setLang('ko')">KO</button>
+                <button class="lang-btn" id="btn-en" onclick="setLang('en')">EN</button>
+                <button class="lang-btn" id="btn-ja" onclick="setLang('ja')">JA</button>
+            </div>
+        </div>
         
         <div class="card">
             <canvas id="growthChart"></canvas>
@@ -39,32 +46,37 @@
         <button class="btn-record" id="t-btn" onclick="addLog()">오늘의 기록 추가</button>
 
         <div class="card" style="margin-top:20px;">
-            <h3 id="t-history">최근 기록</h3>
-            <div id="history-list">데이터를 불러오는 중...</div>
+            <h3 id="t-history" style="margin-top:0;">최근 기록</h3>
+            <div id="history-list"></div>
         </div>
     </div>
 
     <script>
         const supabaseUrl = 'https://pkryjtjsaajalqqzzoyk.supabase.co';
-        const supabaseKey = '사장님의_실제_anon_키'; // ★여기에 사장님의 키를 꼭 넣어주세요!
+        const supabaseKey = '사장님의_실제_anon_키'; // ★이곳에 실제 키를 꼭 유지하세요!
         const _supabase = supabase.createClient(supabaseUrl, supabaseKey);
 
         let currentLang = 'ko';
         const i18n = {
-            ko: { title: "우리아이 성장보고서", dash: "실시간 대시보드", btn: "오늘의 기록 추가", history: "최근 기록", h: "키", w: "몸무게", success: "기록 성공!" },
-            en: { title: "Growth Report", dash: "Dashboard", btn: "Add Record", history: "History", h: "Height", w: "Weight", success: "Success!" },
-            ja: { title: "成長報告書", dash: "ダッシュボード", btn: "記録を追加", history: "履歴", h: "身長", w: "体重", success: "記録成功！" }
+            ko: { dash: "실시간 대시보드", btn: "오늘의 기록 추가", history: "최근 기록", h: "키", w: "몸무게", success: "기록 성공!", promptH: "아이의 키(cm):", promptW: "아이의 몸무게(kg):" },
+            en: { dash: "Dashboard", btn: "Add New Record", history: "Recent Records", h: "Height", w: "Weight", success: "Saved Successfully!", promptH: "Height(cm):", promptW: "Weight(kg):" },
+            ja: { dash: "ダッシュボード", btn: "新しい記録を追加", history: "最近の履歴", h: "身長", w: "体重", success: "記録に成功しました！", promptH: "身長(cm):", promptW: "体重(kg):" }
         };
 
         function setLang(lang) {
             currentLang = lang;
-            document.getElementById('t-title').innerText = i18n[lang].title;
             document.getElementById('t-dash').innerText = i18n[lang].dash;
             document.getElementById('t-btn').innerText = i18n[lang].btn;
             document.getElementById('t-history').innerText = i18n[lang].history;
+            
+            // 버튼 활성화 표시
+            document.querySelectorAll('.lang-btn').forEach(btn => btn.classList.remove('active'));
+            document.getElementById(`btn-${lang}`).classList.add('active');
+            
+            loadData(); // 언어 변경 시 그래프 레이블 업데이트를 위해 리로드
         }
 
-        window.onload = async () => {
+        window.onload = () => {
             setTimeout(() => {
                 document.getElementById('splash').style.opacity = '0';
                 setTimeout(() => {
@@ -76,7 +88,7 @@
         };
 
         async function loadData() {
-            const { data, error } = await _supabase.from('growth_logs').select('*').order('created_at', { ascending: true });
+            const { data } = await _supabase.from('growth_logs').select('*').order('created_at', { ascending: true });
             if (data) {
                 renderList(data);
                 renderChart(data);
@@ -85,7 +97,8 @@
 
         function renderList(data) {
             const listDiv = document.getElementById('history-list');
-            listDiv.innerHTML = data.reverse().map(item => `
+            const sortedData = [...data].reverse();
+            listDiv.innerHTML = sortedData.map(item => `
                 <div class="history-item">
                     <span>${new Date(item.created_at).toLocaleDateString()}</span>
                     <span><b>${item.height}cm / ${item.weight}kg</b></span>
@@ -93,31 +106,16 @@
             `).join('');
         }
 
+        let myChart;
         function renderChart(data) {
             const ctx = document.getElementById('growthChart').getContext('2d');
-            new Chart(ctx, {
+            if (myChart) myChart.destroy();
+            myChart = new Chart(ctx, {
                 type: 'line',
                 data: {
                     labels: data.map(d => new Date(d.created_at).toLocaleDateString()),
                     datasets: [{
-                        label: i18n[currentLang].h + ' (cm)',
+                        label: `${i18n[currentLang].h} (cm)`,
                         data: data.map(d => d.height),
                         borderColor: '#FF6B6B',
-                        fill: false
-                    }]
-                }
-            });
-        }
-
-        async function addLog() {
-            const h = prompt(i18n[currentLang].h + ":");
-            const w = prompt(i18n[currentLang].w + ":");
-            if (h && w) {
-                await _supabase.from('growth_logs').insert([{ height: parseFloat(h), weight: parseFloat(w) }]);
-                alert(i18n[currentLang].success);
-                location.reload();
-            }
-        }
-    </script>
-</body>
-</html>
+                        backgroundColor: 'rgba(25
