@@ -2,60 +2,120 @@
 <html lang="ko">
 <head>
     <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>우리아이 성장보고서</title>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <style>
-        body { margin: 0; font-family: 'Noto Sans KR', sans-serif; background-color: #fcfcfc; }
+        :root { --main-color: #FF6B6B; }
+        body { margin: 0; font-family: 'Noto Sans KR', sans-serif; background-color: #f8f9fa; color: #333; }
         #splash { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: white; display: flex; flex-direction: column; justify-content: center; align-items: center; z-index: 1000; transition: opacity 1s ease; }
-        #main { display: none; padding: 40px 20px; text-align: center; }
-        .btn-record { width: 100%; padding: 20px; background: linear-gradient(135deg, #FF6B6B, #FF8E8E); color: white; border: none; border-radius: 18px; font-size: 18px; font-weight: 700; cursor: pointer; }
+        #main { display: none; max-width: 600px; margin: 0 auto; padding: 20px; }
+        .card { background: white; padding: 20px; border-radius: 20px; box-shadow: 0 4px 12px rgba(0,0,0,0.05); margin-bottom: 20px; }
+        .btn-record { width: 100%; padding: 18px; background: linear-gradient(135deg, var(--main-color), #FF8E8E); color: white; border: none; border-radius: 15px; font-size: 18px; font-weight: bold; cursor: pointer; }
+        .lang-btn { padding: 5px 10px; font-size: 12px; cursor: pointer; border: 1px solid #ddd; border-radius: 5px; background: white; }
+        #history-list { list-style: none; padding: 0; text-align: left; }
+        .history-item { border-bottom: 1px solid #eee; padding: 10px 0; display: flex; justify-content: space-between; }
     </style>
 </head>
 <body>
     <div id="splash">
-        <img src="https://pkryjtjsaajalqqzzoyk.supabase.co/storage/v1/object/public/growth-report-illust/family-illust.png" style="width: 300px; margin-bottom: 15px;">
-        <h2 style="font-size: 24px; color: #333;">우리아이 성장보고서</h2>
-        <p style="color: #888;">함께 성장하는 소중한 기록</p>
+        <img src="https://pkryjtjsaajalqqzzoyk.supabase.co/storage/v1/object/public/growth-report-illust/family-illust.png" style="width: 250px; margin-bottom: 15px;">
+        <h2 id="t-title">우리아이 성장보고서</h2>
+        <div style="margin-top: 10px;">
+            <button class="lang-btn" onclick="setLang('ko')">KO</button>
+            <button class="lang-btn" onclick="setLang('en')">EN</button>
+            <button class="lang-btn" onclick="setLang('ja')">JA</button>
+        </div>
     </div>
 
     <div id="main">
-        <h1 style="font-size: 24px; color: #222; margin-bottom: 30px;">실시간 대시보드</h1>
-        <div style="background: white; padding: 25px; border-radius: 24px; box-shadow: 0 8px 20px rgba(0,0,0,0.04); margin-bottom: 40px;">
-            <div id="status" style="color: #4CAF50; font-weight: bold;">연결 완료 ✅</div>
+        <h2 id="t-dash">실시간 대시보드</h2>
+        
+        <div class="card">
+            <canvas id="growthChart"></canvas>
         </div>
-        <button class="btn-record" onclick="addLog()">오늘의 기록 추가</button>
+
+        <button class="btn-record" id="t-btn" onclick="addLog()">오늘의 기록 추가</button>
+
+        <div class="card" style="margin-top:20px;">
+            <h3 id="t-history">최근 기록</h3>
+            <div id="history-list">데이터를 불러오는 중...</div>
+        </div>
     </div>
 
     <script>
         const supabaseUrl = 'https://pkryjtjsaajalqqzzoyk.supabase.co';
-        // [필독] 사장님의 실제 anon 키를 아래 따옴표 안에 꼭 넣어주세요!
-        const supabaseKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InBrcnlqdGpzYWFqYWxxcXp6b3lrIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Njk2MDgwMjYsImV4cCI6MjA4NTE4NDAyNn0.v8_aUSCd_D0Zqtiq5bGSrkhMRHCQI2e-Lyq1i6Mpqjs'; 
+        const supabaseKey = '사장님의_실제_anon_키'; // ★여기에 사장님의 키를 꼭 넣어주세요!
         const _supabase = supabase.createClient(supabaseUrl, supabaseKey);
 
-        window.onload = () => {
-            setTimeout(() => {
-                const splash = document.getElementById('splash');
-                const main = document.getElementById('main');
-                
-                if (splash) splash.style.opacity = '0';
-                
-                setTimeout(() => {
-                    if (splash) splash.style.display = 'none';
-                    if (main) main.style.display = 'block'; // 메인 화면 강제 활성화!
-                }, 1000);
-            }, 2500);
+        let currentLang = 'ko';
+        const i18n = {
+            ko: { title: "우리아이 성장보고서", dash: "실시간 대시보드", btn: "오늘의 기록 추가", history: "최근 기록", h: "키", w: "몸무게", success: "기록 성공!" },
+            en: { title: "Growth Report", dash: "Dashboard", btn: "Add Record", history: "History", h: "Height", w: "Weight", success: "Success!" },
+            ja: { title: "成長報告書", dash: "ダッシュボード", btn: "記録を追加", history: "履歴", h: "身長", w: "体重", success: "記録成功！" }
         };
 
-        async function addLog() {
-            const h = prompt("아이의 키(cm):", "");
-            const w = prompt("아이의 몸무게(kg):", "");
-            if (h && w) {
-                const { error } = await _supabase.from('growth_logs').insert([{ height: parseFloat(h), weight: parseFloat(w) }]);
-                if (error) alert("실패: " + error.message);
-                else {
-                    alert("기록 성공! ✨ 사장님, 드디어 해내셨습니다!");
-                    location.reload();
+        function setLang(lang) {
+            currentLang = lang;
+            document.getElementById('t-title').innerText = i18n[lang].title;
+            document.getElementById('t-dash').innerText = i18n[lang].dash;
+            document.getElementById('t-btn').innerText = i18n[lang].btn;
+            document.getElementById('t-history').innerText = i18n[lang].history;
+        }
+
+        window.onload = async () => {
+            setTimeout(() => {
+                document.getElementById('splash').style.opacity = '0';
+                setTimeout(() => {
+                    document.getElementById('splash').style.display = 'none';
+                    document.getElementById('main').style.display = 'block';
+                    loadData();
+                }, 1000);
+            }, 2000);
+        };
+
+        async function loadData() {
+            const { data, error } = await _supabase.from('growth_logs').select('*').order('created_at', { ascending: true });
+            if (data) {
+                renderList(data);
+                renderChart(data);
+            }
+        }
+
+        function renderList(data) {
+            const listDiv = document.getElementById('history-list');
+            listDiv.innerHTML = data.reverse().map(item => `
+                <div class="history-item">
+                    <span>${new Date(item.created_at).toLocaleDateString()}</span>
+                    <span><b>${item.height}cm / ${item.weight}kg</b></span>
+                </div>
+            `).join('');
+        }
+
+        function renderChart(data) {
+            const ctx = document.getElementById('growthChart').getContext('2d');
+            new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels: data.map(d => new Date(d.created_at).toLocaleDateString()),
+                    datasets: [{
+                        label: i18n[currentLang].h + ' (cm)',
+                        data: data.map(d => d.height),
+                        borderColor: '#FF6B6B',
+                        fill: false
+                    }]
                 }
+            });
+        }
+
+        async function addLog() {
+            const h = prompt(i18n[currentLang].h + ":");
+            const w = prompt(i18n[currentLang].w + ":");
+            if (h && w) {
+                await _supabase.from('growth_logs').insert([{ height: parseFloat(h), weight: parseFloat(w) }]);
+                alert(i18n[currentLang].success);
+                location.reload();
             }
         }
     </script>
