@@ -2,246 +2,129 @@
 <html lang="ko">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>우리아이 성장보고서</title>
-    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>아이 성장 보고서</title>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <style>
-        :root { --main-color: #FF6B6B; }
-        body { margin: 0; font-family: 'Noto Sans KR', sans-serif; background-color: #f8f9fa; }
-        #splash { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: white; display: flex; flex-direction: column; justify-content: center; align-items: center; z-index: 1000; transition: opacity 1s ease; }
-        #main { display: none; max-width: 600px; margin: 0 auto; padding: 20px; text-align: center; }
-        .header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; }
-        .lang-btn { padding: 4px 8px; font-size: 11px; cursor: pointer; border: 1px solid #ddd; border-radius: 6px; background: white; }
-        .lang-btn.active { background: var(--main-color); color: white; border-color: var(--main-color); }
-        .card { background: white; padding: 20px; border-radius: 20px; box-shadow: 0 4px 12px rgba(0,0,0,0.05); margin-bottom: 20px; }
-        .btn-record { width: 100%; padding: 18px; background: linear-gradient(135deg, var(--main-color), #FF8E8E); color: white; border: none; border-radius: 15px; font-size: 18px; font-weight: bold; cursor: pointer; }
-        .history-item { border-bottom: 1px solid #eee; padding: 15px 0; display: flex; gap: 15px; align-items: center; text-align: left; }
-        .history-img { width: 65px; height: 65px; border-radius: 12px; object-fit: cover; background: #eee; }
+        :root { --primary: #FF6B6B; --bg: #F8F9FA; }
+        body { font-family: -apple-system, sans-serif; background: var(--bg); margin: 0; padding: 20px; }
+        .card { background: white; border-radius: 20px; padding: 20px; box-shadow: 0 4px 12px rgba(0,0,0,0.05); margin-bottom: 20px; }
+        .btn { background: var(--primary); color: white; border: none; width: 100%; padding: 15px; border-radius: 12px; font-size: 16px; font-weight: bold; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 8px; }
+        .history-item { display: flex; align-items: center; gap: 15px; padding: 15px 0; border-bottom: 1px solid #EEE; }
+        .history-img { width: 65px; height: 65px; border-radius: 12px; object-fit: cover; background: #EEE; }
     </style>
 </head>
 <body>
-    <div id="splash">
-        <img src="https://pkryjtjsaajalqqzzoyk.supabase.co/storage/v1/object/public/growth-report-illust/family-illust.png" style="width: 280px; margin-bottom: 20px;">
-        <h2 id="s-title" style="color:#333;">우리아이 성장보고서</h2>
+    <div id="splash" style="position:fixed;top:0;left:0;width:100%;height:100%;background:white;display:flex;justify-content:center;align-items:center;z-index:1000;">
+        <h2 style="color:var(--primary);">👣 성장보고서 준비중...</h2>
     </div>
 
-    <div id="main">
-        <div class="header">
-            <h2 id="t-dash" style="margin:0; font-size: 18px;">실시간 대시보드</h2>
-            <div class="lang-group">
-                <button class="lang-btn active" id="btn-ko" onclick="setLang('ko')">KO</button>
-                <button class="lang-btn" id="btn-en" onclick="setLang('en')">EN</button>
-                <button class="lang-btn" id="btn-ja" onclick="setLang('ja')">JA</button>
-            </div>
-        </div>
-        
-        <div class="card"><canvas id="growthChart"></canvas></div>
+    <div class="card">
+        <h3>실시간 대시보드</h3>
+        <canvas id="growthChart"></canvas>
+    </div>
 
-        <input type="file" id="photo-input" accept="image/*" style="display:none;">
-        <button class="btn-record" onclick="document.getElementById('photo-input').click()">📸 <span id="t-btn">오늘의 기록 & 사진 추가</span></button>
+    <button class="btn" onclick="showAddLog()">📸 오늘의 기록 & 사진 추가</button>
 
-        <div class="card" style="margin-top:20px;">
-            <h3 id="t-history" style="margin:0 0 15px 0; text-align: left;">최근 기록</h3>
-            <div id="history-list"></div>
-        </div>
+    <div class="card" style="margin-top:20px;">
+        <h3>최근 기록</h3>
+        <div id="history-list"></div>
     </div>
 
     <script>
-        const supabaseUrl = 'https://pkryjtjsaajalqqzzoyk.supabase.co';
-        const supabaseKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InBrcnlqdGpzYWFqYWxxcXp6b3lrIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Njk2MDgwMjYsImV4cCI6MjA4NTE4NDAyNn0.v8_aUSCd_D0Zqtiq5bGSrkhMRHCQI2e-Lyq1i6Mpqjs'; // ★여기에 사장님의 실제 키를 꼭 넣어주세요!
-        const _supabase = supabase.createClient(supabaseUrl, supabaseKey);
-
-        let currentLang = 'ko';
-        const i18n = {
-            ko: { s: "우리아이 성장보고서", dash: "실시간 대시보드", btn: "오늘의 기록 & 사진 추가", history: "최근 기록", h: "키(cm)", w: "몸무게(kg)", success: "저장 완료! ✨" },
-            en: { s: "Growth Report", dash: "Dashboard", btn: "Add Record & Photo", history: "History", h: "Height(cm)", w: "Weight(kg)", success: "Saved! ✨" },
-            ja: { s: "成長報告書", dash: "ダッシュボード", btn: "記録と写真を追加", history: "履歴", h: "身長(cm)", w: "体重(kg)", success: "完了！ ✨" }
-        };
-
-        function setLang(lang) {
-            currentLang = lang;
-            document.getElementById('s-title').innerText = i18n[lang].s;
-            document.getElementById('t-dash').innerText = i18n[lang].dash;
-            document.getElementById('t-btn').innerText = i18n[lang].btn;
-            document.getElementById('t-history').innerText = i18n[lang].history;
-            document.querySelectorAll('.lang-btn').forEach(b => b.classList.remove('active'));
-            document.getElementById(`btn-${lang}`).classList.add('active');
-            loadData();
-        }
+        const SUPABASE_URL = 'https://kamille002.supabase.co'; // 사장님 URL 확인
+        const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InBrcnlqdGpzYWFqYWxxcXp6b3lrIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Njk2MDgwMjYsImV4cCI6MjA4NTE4NDAyNn0.v8_aUSCd_D0Zqtiq5bGSrkhMRHCQI2e-Lyq1i6Mpqjs'; 
+        const _supabase = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
         window.onload = () => {
             setTimeout(() => {
-                const sp = document.getElementById('splash');
-                const mn = document.getElementById('main');
-                sp.style.opacity = '0';
-                setTimeout(() => {
-                    sp.style.display = 'none';
-                    mn.style.display = 'block';
-                    loadData();
-                }, 1000);
-            }, 2500);
-        };
-
-        document.getElementById('photo-input').onchange = async (e) => {
-            const file = e.target.files[0];
-            if (!file) return;
-
-            const h = prompt(i18n[currentLang].h);
-            const w = prompt(i18n[currentLang].w);
-
-            if (h && w) {
-                let photoUrl = '';
-                const fileName = `${Date.now()}_img`;
-                const { data: upData } = await _supabase.storage.from('growth-photos').upload(fileName, file); //
-                
-                if (upData) {
-                    const { data } = _supabase.storage.from('growth-photos').getPublicUrl(fileName);
-                    photoUrl = data.publicUrl;
-                }
-
-                await _supabase.from('growth_logs').insert([{ height: parseFloat(h), weight: parseFloat(w), photo_url: photoUrl }]); //
-                alert(i18n[currentLang].success);
+                document.getElementById('splash').style.display = 'none';
                 loadData();
-            }
+            }, 2000);
         };
 
-      async function loadData() {
-        const { data } = await _supabase.from('growth_logs').select('*').order('created_at', { ascending: true });
-        if (data) {
-            const listDiv = document.getElementById('history-list');
-            listDiv.innerHTML = [...data].reverse().map(item => `
-                <div class="history-item">
-                    <img src="${item.photo_url || 'https://via.placeholder.com/65'}" class="history-img">
-                    <div style="flex: 1;">
-                        <div style="font-size: 11px; color:#888;">${new Date(item.created_at).toLocaleDateString()}</div>
-                        <div style="display: flex; justify-content: space-between; align-items: center;">
-                            <div style="font-weight:bold;">${item.height}cm / ${item.weight}kg</div>
-                            <div onclick="deleteLog('${item.id}')" style="color: #ff6b6b; font-size: 12px; cursor: pointer; padding: 5px;">삭제</div>
+        async function loadData() {
+            const { data } = await _supabase.from('growth_logs').select('*').order('created_at', { ascending: true });
+            if (data) {
+                const listDiv = document.getElementById('history-list');
+                listDiv.innerHTML = [...data].reverse().map(item => `
+                    <div class="history-item">
+                        <img src="${item.photo_url || 'https://via.placeholder.com/65'}" class="history-img">
+                        <div style="flex: 1;">
+                            <div style="font-size: 11px; color:#888;">${new Date(item.created_at).toLocaleDateString()}</div>
+                            <div style="display: flex; justify-content: space-between; align-items: center;">
+                                <div style="font-weight:bold;">${item.height}cm / ${item.weight}kg</div>
+                                <div onclick="deleteLog('${item.id}')" style="color:#ff6b6b; font-size:12px; cursor:pointer;">삭제</div>
+                            </div>
                         </div>
                     </div>
-                </div>
-            `).join('');
-            renderChart(data);
+                `).join('');
+                renderChart(data);
+            }
         }
-    }
 
-    async function deleteLog(id) {
-        if (confirm("이 기록을 삭제할까요?")) {
-            const { error } = await _supabase.from('growth_logs').delete().eq('id', id);
-            if (!error) {
-                alert("삭제되었습니다.");
+        async function deleteLog(id) {
+            if (confirm("삭제할까요?")) {
+                await _supabase.from('growth_logs').delete().eq('id', id);
                 loadData();
             }
         }
-    }
 
-    let myChart;
-    function renderChart(data) {
-        const ctx = document.getElementById('growthChart').getContext('2d');
-        if (myChart) myChart.destroy();
-        myChart = new Chart(ctx, {
-            type: 'line',
-            data: {
-                labels: data.map(d => new Date(d.created_at).toLocaleDateString()),
-                datasets: [{ label: i18n[currentLang].h, data: data.map(d => d.height), borderColor: '#FF6B6B', tension: 0.3 }]
-            }
-        });
-    }
-
-    window.showAddLog = () => {
-        const today = new Date().toISOString().split('T')[0];
-        Swal.fire({
-            title: i18n[currentLang].add,
-            html: `
-                <input type="date" id="logDate" class="swal2-input" value="${today}">
-                <input type="number" id="height" class="swal2-input" placeholder="${i18n[currentLang].h} (cm)">
-                <input type="number" id="weight" class="swal2-input" placeholder="${i18n[currentLang].w} (kg)">
-                <input type="file" id="photo" class="swal2-input" accept="image/*">
-            `,
-            showCancelButton: true,
-            confirmButtonText: i18n[currentLang].save,
-            preConfirm: () => {
-                return {
-                    date: document.getElementById('logDate').value,
-                    height: document.getElementById('height').value,
-                    weight: document.getElementById('weight').value,
-                    photo: document.getElementById('photo').files[0]
+        let myChart;
+        function renderChart(data) {
+            const ctx = document.getElementById('growthChart').getContext('2d');
+            if (myChart) myChart.destroy();
+            myChart = new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels: data.map(d => new Date(d.created_at).toLocaleDateString()),
+                    datasets: [{ label: '키(cm)', data: data.map(d => d.height), borderColor: '#FF6B6B', tension: 0.3 }]
                 }
-            }
-        }).then(async (result) => {
-            if (result.isConfirmed) {
-                const { date, height, weight, photo } = result.value;
-                let photo_url = '';
+            });
+        }
 
-                if (photo) {
-                    const fileName = `${Date.now()}_img`;
-                    const { data: upData } = await _supabase.storage.from('growth-photos').upload(fileName, photo);
-                    if (upData) {
-                        const { data: urlData } = _supabase.storage.from('growth-photos').getPublicUrl(fileName);
-                        photo_url = urlData.publicUrl;
+        window.showAddLog = () => {
+            const today = new Date().toISOString().split('T')[0];
+            Swal.fire({
+                title: '기록 추가',
+                html: `
+                    <input type="date" id="logDate" class="swal2-input" value="${today}">
+                    <input type="number" id="height" class="swal2-input" placeholder="키(cm)">
+                    <input type="number" id="weight" class="swal2-input" placeholder="몸무게(kg)">
+                    <input type="file" id="photo" class="swal2-input" accept="image/*">
+                `,
+                confirmButtonText: '저장',
+                showCancelButton: true,
+                preConfirm: () => {
+                    return {
+                        date: document.getElementById('logDate').value,
+                        height: document.getElementById('height').value,
+                        weight: document.getElementById('weight').value,
+                        photo: document.getElementById('photo').files[0]
                     }
                 }
-
-                await _supabase.from('growth_logs').insert([{ 
-                    height: parseFloat(height), 
-                    weight: parseFloat(weight), 
-                    photo_url: photo_url,
-                    created_at: new Date(date).toISOString() 
-                }]);
-                alert(i18n[currentLang].success);
-                loadData();
-            }
-        });
-    };
-</script>
+            }).then(async (result) => {
+                if (result.isConfirmed) {
+                    const { date, height, weight, photo } = result.value;
+                    let photo_url = '';
+                    if (photo) {
+                        const fileName = `${Date.now()}_img`;
+                        const { data: upData } = await _supabase.storage.from('growth-photos').upload(fileName, photo);
+                        if (upData) {
+                            const { data: urlData } = _supabase.storage.from('growth-photos').getPublicUrl(fileName);
+                            photo_url = urlData.publicUrl;
+                        }
+                    }
+                    await _supabase.from('growth_logs').insert([{ 
+                        height: parseFloat(height), weight: parseFloat(weight), 
+                        photo_url: photo_url, created_at: new Date(date).toISOString() 
+                    }]);
+                    loadData();
+                }
+            });
+        };
+    </script>
 </body>
-<script>
-   
-    window.showAddLog = () => {
-        const today = new Date().toISOString().split('T')[0];
-        Swal.fire({
-            title: i18n[currentLang].add,
-            html: `
-                <input type="date" id="logDate" class="swal2-input" value="${today}">
-                <input type="number" id="height" class="swal2-input" placeholder="${i18n[currentLang].h} (cm)">
-                <input type="number" id="weight" class="swal2-input" placeholder="${i18n[currentLang].w} (kg)">
-                <input type="file" id="photo" class="swal2-input" accept="image/*">
-            `,
-            showCancelButton: true,
-            confirmButtonText: i18n[currentLang].save,
-            preConfirm: () => {
-                return {
-                    date: document.getElementById('logDate').value,
-                    height: document.getElementById('height').value,
-                    weight: document.getElementById('weight').value,
-                    photo: document.getElementById('photo').files[0]
-                }
-            }
-        }).then(async (result) => {
-            if (result.isConfirmed) {
-                const { date, height, weight, photo } = result.value;
-                let photo_url = '';
-
-                if (photo) {
-                    const fileName = `${Date.now()}_img`;
-                    const { data: upData } = await _supabase.storage.from('growth-photos').upload(fileName, photo);
-                    if (upData) {
-                        const { data: urlData } = _supabase.storage.from('growth-photos').getPublicUrl(fileName);
-                        photo_url = urlData.publicUrl;
-                    }
-                }
-
-                await _supabase.from('growth_logs').insert([{ 
-                    height: parseFloat(height), 
-                    weight: parseFloat(weight), 
-                    photo_url: photo_url,
-                    created_at: new Date(date).toISOString() 
-                }]);
-                alert(i18n[currentLang].success);
-                loadData();
-            }
-        });
-    };
-</script>
 </html>
