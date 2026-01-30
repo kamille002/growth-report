@@ -115,9 +115,23 @@
                         <img src="${item.photo_url || 'https://via.placeholder.com/65'}" class="history-img">
                         <div>
                             <div style="font-size: 11px; color:#888;">${new Date(item.created_at).toLocaleDateString()}</div>
+                           <div style="display: flex; justify-content: space-between; align-items: center;">
                             <div style="font-weight:bold;">${item.height}cm / ${item.weight}kg</div>
+                            <div onclick="deleteLog('${item.id}')" style="color: #ff6b6b; font-size: 12px; cursor: pointer; padding: 5px;">삭제</div>
                         </div>
                     </div>
+                </div>
+                    // 123번 줄부터 붙여넣으세요
+async function deleteLog(id) {
+    if (confirm("이 기록을 삭제할까요?")) {
+        // Supabase에서 해당 ID의 데이터를 지웁니다.
+        const { error } = await _supabase.from('growth_logs').delete().eq('id', id);
+        if (!error) {
+            alert("삭제되었습니다.");
+            loadData(); // 목록 새로고침
+        }
+    }
+}
                 `).join('');
                 renderChart(data);
             }
