@@ -106,7 +106,8 @@
             }
         };
 
-       async function loadData() {
+       // 109번 줄부터 아래 내용을 통째로 붙여넣으세요.
+    async function loadData() {
         const { data } = await _supabase.from('growth_logs').select('*').order('created_at', { ascending: true });
         if (data) {
             const listDiv = document.getElementById('history-list');
@@ -148,6 +149,53 @@
             }
         });
     }
+
+    // 팝업 창 함수 - 날짜 선택 기능 포함
+    window.showAddLog = () => {
+        const today = new Date().toISOString().split('T')[0];
+        Swal.fire({
+            title: i18n[currentLang].add,
+            html: `
+                <input type="date" id="logDate" class="swal2-input" value="${today}">
+                <input type="number" id="height" class="swal2-input" placeholder="${i18n[currentLang].h} (cm)">
+                <input type="number" id="weight" class="swal2-input" placeholder="${i18n[currentLang].w} (kg)">
+                <input type="file" id="photo" class="swal2-input" accept="image/*">
+            `,
+            showCancelButton: true,
+            confirmButtonText: i18n[currentLang].save,
+            preConfirm: () => {
+                return {
+                    date: document.getElementById('logDate').value,
+                    height: document.getElementById('height').value,
+                    weight: document.getElementById('weight').value,
+                    photo: document.getElementById('photo').files[0]
+                }
+            }
+        }).then(async (result) => {
+            if (result.isConfirmed) {
+                const { date, height, weight, photo } = result.value;
+                let photo_url = '';
+
+                if (photo) {
+                    const fileName = `${Date.now()}_img`;
+                    const { data: upData } = await _supabase.storage.from('growth-photos').upload(fileName, photo);
+                    if (upData) {
+                        const { data } = _supabase.storage.from('growth-photos').getPublicUrl(fileName);
+                        photo_url = data.publicUrl;
+                    }
+                }
+
+                await _supabase.from('growth_logs').insert([{ 
+                    height: parseFloat(height), 
+                    weight: parseFloat(weight), 
+                    photo_url: photo_url,
+                    created_at: new Date(date).toISOString() 
+                }]);
+                alert(i18n[currentLang].success);
+                loadData();
+            }
+        });
+    };
 </script>
 </body>
 </html>
