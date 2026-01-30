@@ -3,34 +3,38 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>성장 보고서</title>
+    <title>우리아이 성장보고서</title>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <style>
-        :root { --primary: #FF6B6B; --bg: #F0F2F5; }
+        :root { --primary: #FF6B6B; --bg: #F8F9FA; }
         body { font-family: -apple-system, sans-serif; background: var(--bg); margin: 0; display: flex; justify-content: center; }
-        .app-container { width: 100%; max-width: 480px; min-height: 100vh; background: white; padding: 20px; box-sizing: border-box; box-shadow: 0 0 20px rgba(0,0,0,0.05); }
-        .card { background: white; border-radius: 24px; padding: 20px; box-shadow: 0 4px 16px rgba(0,0,0,0.04); margin-bottom: 20px; }
+        .app-container { width: 100%; max-width: 480px; min-height: 100vh; background: white; padding: 20px; box-sizing: border-box; }
+        .header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; }
+        .card { background: white; border-radius: 24px; padding: 20px; box-shadow: 0 4px 16px rgba(0,0,0,0.04); margin-bottom: 20px; border: 1px solid #F0F0F0; }
         .btn { background: var(--primary); color: white; border: none; width: 100%; padding: 16px; border-radius: 16px; font-size: 16px; font-weight: bold; cursor: pointer; }
         .history-item { display: flex; align-items: center; gap: 15px; padding: 15px 0; border-bottom: 1px solid #F5F5F5; }
-        .history-img { width: 60px; height: 60px; border-radius: 14px; object-fit: cover; background: #EEE; }
+        .history-img { width: 60px; height: 60px; border-radius: 14px; object-fit: cover; background: #F0F0F0; display: flex; align-items: center; justify-content: center; font-size: 24px; }
         #splash { position:fixed; top:0; left:0; width:100%; height:100%; background:white; display:flex; flex-direction:column; justify-content:center; align-items:center; z-index:2000; transition: 0.8s; }
+        .lang-btn { font-size: 10px; border: 1px solid #DDD; padding: 2px 6px; border-radius: 4px; color: #888; margin-left: 4px; }
     </style>
 </head>
 <body>
     <div id="splash">
-        <img id="splash-img" src="https://pkryjtjsaajalqqzzoyk.supabase.co/storage/v1/object/public/growth-report-illust/family-illust.png" style="width:200px; border-radius:20px; margin-bottom:20px;" onerror="this.src='https://via.placeholder.com/200?text=Growth+Report'">
+        <img id="splash-img" src="https://pkryjtjsaajalqqzzoyk.supabase.co/storage/v1/object/public/growth-report-illust/family-illust.png" style="width:400px; border-radius:20px; margin-bottom:20px;" onerror="this.src='https://via.placeholder.com/400?text=Growth+Report'">
         <h2 style="color:var(--primary);">성장 보고서</h2>
-        <p style="color:#888;">아이의 기록을 불러오고 있습니다...</p>
     </div>
 
     <div class="app-container">
-        <h2 style="font-size:20px;">실시간 대시보드</h2>
+        <div class="header">
+            <h2 style="margin:0; font-size:18px;">실시간 대시보드</h2>
+            <div><span class="lang-btn">KO</span><span class="lang-btn">EN</span><span class="lang-btn">JA</span></div>
+        </div>
         <div class="card"><canvas id="growthChart"></canvas></div>
-        <button class="btn" onclick="showAddLog()">📸 오늘의 기록 & 사진 추가</button>
+        <button class="btn" onclick="showAddLog()">📸 오늘의 기록 추가</button>
         <div style="margin-top:30px;">
-            <h3>최근 기록</h3>
+            <h3 style="font-size:16px;">최근 기록</h3>
             <div id="history-list"></div>
         </div>
     </div>
@@ -44,41 +48,30 @@
             loadData();
             setTimeout(() => {
                 const splash = document.getElementById('splash');
-                if(splash) {
-                    splash.style.opacity = '0';
-                    setTimeout(() => splash.style.display = 'none', 800);
-                }
-            }, 3000);
+                splash.style.opacity = '0';
+                setTimeout(() => splash.style.display = 'none', 800);
+            }, 2500);
         };
 
         async function loadData() {
-            try {
-                // 테이블 이름이 growth_logs 가 맞는지 꼭 확인해주세요!
-                const { data, error } = await _supabase.from('growth_logs').select('*').order('created_at', { ascending: true });
-                if (error) throw error;
-                
+            const { data } = await _supabase.from('growth_logs').select('*').order('created_at', { ascending: true });
+            if (data) {
                 const listDiv = document.getElementById('history-list');
-                if (data && data.length > 0) {
-                    listDiv.innerHTML = [...data].reverse().map(item => `
-                        <div class="history-item">
-                            <img src="${item.photo_url || 'https://via.placeholder.com/60'}" class="history-img">
-                            <div style="flex: 1;">
-                                <div style="font-size: 11px; color:#AAA;">${new Date(item.created_at).toLocaleDateString()}</div>
-                                <div style="display: flex; justify-content: space-between; align-items: center;">
-                                    <div style="font-weight:700;">${item.height}cm / ${item.weight}kg</div>
-                                    <div onclick="deleteLog('${item.id}')" style="color:#FF6B6B; font-size:12px; cursor:pointer;">삭제</div>
-                                </div>
+                listDiv.innerHTML = [...data].reverse().map(item => `
+                    <div class="history-item">
+                        <div class="history-img">
+                            ${item.photo_url && item.photo_url !== 'EMPTY' ? `<img src="${item.photo_url}" style="width:100%; height:100%; border-radius:14px; object-fit:cover;">` : '👶'}
+                        </div>
+                        <div style="flex: 1;">
+                            <div style="font-size: 11px; color:#AAA;">${new Date(item.created_at).toLocaleDateString()}</div>
+                            <div style="display: flex; justify-content: space-between; align-items: center;">
+                                <div style="font-weight:700;">${item.height}cm / ${item.weight}kg</div>
+                                <div onclick="deleteLog('${item.id}')" style="color:#FF6B6B; font-size:12px; cursor:pointer;">삭제</div>
                             </div>
                         </div>
-                    `).join('');
-                    renderChart(data);
-                } else {
-                    listDiv.innerHTML = "<p style='color:#888; text-align:center;'>기록이 없습니다.</p>";
-                }
-            } catch (e) {
-                console.error("로딩 실패:", e.message);
-                // 에러 발생 시 강제로 스플래시 제거하여 화면 보여주기
-                document.getElementById('splash').style.display = 'none';
+                    </div>
+                `).join('');
+                renderChart(data);
             }
         }
 
@@ -91,28 +84,26 @@
 
         let myChart;
         function renderChart(data) {
-            const canvas = document.getElementById('growthChart');
-            if (!canvas) return;
-            const ctx = canvas.getContext('2d');
+            const ctx = document.getElementById('growthChart').getContext('2d');
             if (myChart) myChart.destroy();
             myChart = new Chart(ctx, {
                 type: 'line',
                 data: {
                     labels: data.map(d => new Date(d.created_at).toLocaleDateString()),
-                    datasets: [{ label: '키(cm)', data: data.map(d => d.height), borderColor: '#FF6B6B', tension: 0.4 }]
-                }
+                    datasets: [{ label: '키(cm)', data: data.map(d => d.height), borderColor: '#FF6B6B', backgroundColor: 'rgba(255,107,107,0.1)', fill: true, tension: 0.4 }]
+                },
+                options: { plugins: { legend: { display: false } } }
             });
         }
 
         window.showAddLog = () => {
             const today = new Date().toISOString().split('T')[0];
             Swal.fire({
-                title: '쑥쑥 기록하기',
+                title: '성장 기록',
                 html: `
                     <input type="date" id="logDate" class="swal2-input" value="${today}">
                     <input type="number" id="height" class="swal2-input" placeholder="키(cm)">
                     <input type="number" id="weight" class="swal2-input" placeholder="몸무게(kg)">
-                    <input type="file" id="photo" class="swal2-input" accept="image/*">
                 `,
                 confirmButtonText: '저장',
                 showCancelButton: true,
@@ -120,25 +111,15 @@
                     return {
                         date: document.getElementById('logDate').value,
                         height: document.getElementById('height').value,
-                        weight: document.getElementById('weight').value,
-                        photo: document.getElementById('photo').files[0]
+                        weight: document.getElementById('weight').value
                     }
                 }
             }).then(async (result) => {
                 if (result.isConfirmed) {
-                    const { date, height, weight, photo } = result.value;
-                    let photo_url = '';
-                    if (photo) {
-                        const fileName = `${Date.now()}_img`;
-                        const { data: upData } = await _supabase.storage.from('growth-photos').upload(fileName, photo);
-                        if (upData) {
-                            const { data: urlData } = _supabase.storage.from('growth-photos').getPublicUrl(fileName);
-                            photo_url = urlData.publicUrl;
-                        }
-                    }
+                    const { date, height, weight } = result.value;
                     await _supabase.from('growth_logs').insert([{ 
                         height: parseFloat(height), weight: parseFloat(weight), 
-                        photo_url: photo_url, created_at: new Date(date).toISOString() 
+                        photo_url: 'EMPTY', created_at: new Date(date).toISOString() 
                     }]);
                     loadData();
                 }
