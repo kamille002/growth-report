@@ -1,77 +1,24 @@
-/* 전체 배경 및 폰트 설정 */
 body {
-  background-color: #ffffff;
-  color: #1a1a1a;
-  font-family: 'Pretendard', sans-serif; /* 혹은 기본 sans-serif */
-  margin: 0;
-  line-height: 1.6;
-}
-
-/* 상단 헤더: 샤넬 스타일의 깔끔한 텍스트 */
-header {
-  padding: 60px 20px 40px;
-  max-width: 600px;
-  margin: 0 auto;
-}
-
-header h1 {
-  font-size: 0.7rem;
-  letter-spacing: 0.3em;
-  text-transform: uppercase;
-  color: #999;
-  margin-bottom: 10px;
+  background-color: #fdfcfb; /* 완전 흰색보다 따뜻한 웜 화이트 */
+  color: #4a423d; /* 차가운 검정 대신 깊은 브라운 블랙 */
 }
 
 .ai-message {
-  font-size: 1.5rem;
-  font-weight: 300;
-  color: #1a1a1a;
-}
-
-.ai-message strong {
-  font-weight: 700;
-}
-
-/* 기록 버튼: 나이키 앱 스타일의 미니멀 버튼 */
-.quick-log {
-  display: grid;
-  grid-cols: 3;
-  gap: 10px;
-  padding: 0 20px;
-  max-width: 600px;
-  margin: 0 auto 60px;
+  background: linear-gradient(135deg, #fff5f0 0%, #ffffff 100%); /* 은은한 살구빛 그라데이션 */
+  padding: 30px;
+  border-radius: 20px;
+  border: 1px solid #f9ece4;
+  box-shadow: 0 10px 30px rgba(210, 180, 160, 0.1);
 }
 
 .log-btn {
-  border: 1px solid #e5e5e5;
-  background: none;
-  padding: 30px 0;
-  font-size: 0.7rem;
-  letter-spacing: 0.1em;
-  text-transform: uppercase;
-  cursor: pointer;
-  transition: all 0.2s;
+  border: 1px solid #eee1d7;
+  border-radius: 12px;
+  color: #7d6e66;
+  background: #fff;
 }
 
 .log-btn:hover {
-  background-color: #f9f9f9;
-  border-color: #1a1a1a;
-}
-
-/* 지도/세이프존 섹션 */
-.safe-zone {
-  padding: 0 20px;
-  max-width: 600px;
-  margin: 0 auto;
-}
-
-.map-container {
-  background-color: #f9f9f9;
-  aspect-ratio: 16 / 9;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-size: 0.8rem;
-  color: #ccc;
-  border: 1px solid #f0f0f0;
+  background-color: #f9f4f1;
+  border-color: #d2b4a0;
 }
