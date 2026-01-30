@@ -106,7 +106,7 @@
             }
         };
 
-        async function loadData() {
+       async function loadData() {
         const { data } = await _supabase.from('growth_logs').select('*').order('created_at', { ascending: true });
         if (data) {
             const listDiv = document.getElementById('history-list');
@@ -135,23 +135,19 @@
             }
         }
     }
-                `).join('');
-                renderChart(data);
-            }
-        }
 
-        let myChart;
-        function renderChart(data) {
-            const ctx = document.getElementById('growthChart').getContext('2d');
-            if (myChart) myChart.destroy();
-            myChart = new Chart(ctx, {
-                type: 'line',
-                data: {
-                    labels: data.map(d => new Date(d.created_at).toLocaleDateString()),
-                    datasets: [{ label: i18n[currentLang].h, data: data.map(d => d.height), borderColor: '#FF6B6B', tension: 0.3 }]
-                }
-            });
-        }
-    </script>
+    let myChart;
+    function renderChart(data) {
+        const ctx = document.getElementById('growthChart').getContext('2d');
+        if (myChart) myChart.destroy();
+        myChart = new Chart(ctx, {
+            type: 'line',
+            data: {
+                labels: data.map(d => new Date(d.created_at).toLocaleDateString()),
+                datasets: [{ label: i18n[currentLang].h, data: data.map(d => d.height), borderColor: '#FF6B6B', tension: 0.3 }]
+            }
+        });
+    }
+</script>
 </body>
 </html>
