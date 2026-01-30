@@ -93,10 +93,10 @@
             if (h && w) {
                 let photoUrl = '';
                 const fileName = `${Date.now()}_img`;
-                const { data: upData } = await _supabase.storage.from('growth-report-illust').upload(fileName, file); //
+                const { data: upData } = await _supabase.storage.from('growth-photos').upload(fileName, file); //
                 
                 if (upData) {
-                    const { data } = _supabase.storage.from('growth-report-illust').getPublicUrl(fileName);
+                    const { data } = _supabase.storage.from('growth-photos').getPublicUrl(fileName);
                     photoUrl = data.publicUrl;
                 }
 
