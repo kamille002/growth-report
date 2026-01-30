@@ -15,12 +15,12 @@
         .btn { background: var(--primary); color: white; border: none; width: 100%; padding: 16px; border-radius: 16px; font-size: 16px; font-weight: bold; cursor: pointer; }
         .history-item { display: flex; align-items: center; gap: 15px; padding: 15px 0; border-bottom: 1px solid #F5F5F5; }
         .history-img { width: 60px; height: 60px; border-radius: 14px; object-fit: cover; background: #EEE; }
-        #splash { position:fixed; top:0; left:0; width:100%; height:100%; background:white; display:flex; flex-direction:column; justify-content:center; align-items:center; z-index:2000; transition: 0.8s; }
+        #splash { position:fixed; top:0; left:0; width:200%; height:200%; background:white; display:flex; flex-direction:column; justify-content:center; align-items:center; z-index:2000; transition: 0.8s; }
     </style>
 </head>
 <body>
     <div id="splash">
-        <img id="splash-img" src="https://kamille002.supabase.co/storage/v1/object/public/growth-report-illust/family-illust.png" style="width:200px; border-radius:20px; margin-bottom:20px; display:none;" onerror="this.src='https://via.placeholder.com/200?text=Growth+Report'">
+        <img id="splash-img" src="https://kamille002.supabase.co/storage/v1/object/public/growth-report-illust/family-illust.png" style="width:350px; border-radius:20px; margin-bottom:20px; display:none;" onerror="this.src='https://via.placeholder.com/200?text=Growth+Report'">
         <h2 style="color:var(--primary);">성장 보고서</h2>
         <p style="color:#888;">데이터를 동기화 중입니다...</p>
     </div>
@@ -36,7 +36,7 @@
     </div>
 
     <script>
-        const SUPABASE_URL = 'https://kamille002.supabase.co';
+        const SUPABASE_URL = 'https://pkryjtjsaajalqqzzoyk.supabase.co';
         const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InBrcnlqdGpzYWFqYWxxcXp6b3lrIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Njk2MDgwMjYsImV4cCI6MjA4NTE4NDAyNn0.v8_aUSCd_D0Zqtiq5bGSrkhMRHCQI2e-Lyq1i6Mpqjs'; 
         const _supabase = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
