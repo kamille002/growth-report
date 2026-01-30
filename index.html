@@ -20,7 +20,7 @@
 </head>
 <body>
     <div id="splash">
-        <img id="splash-img" src="https://kamille002.supabase.co/storage/v1/object/public/growth-report-illust/illust_main.png" style="width:200px; border-radius:20px; margin-bottom:20px; display:none;" onerror="this.src='https://via.placeholder.com/200?text=Growth+Report'">
+        <img id="splash-img" src="https://kamille002.supabase.co/storage/v1/object/public/growth-report-illust/family-illust.png" style="width:200px; border-radius:20px; margin-bottom:20px; display:none;" onerror="this.src='https://via.placeholder.com/200?text=Growth+Report'">
         <h2 style="color:var(--primary);">성장 보고서</h2>
         <p style="color:#888;">데이터를 동기화 중입니다...</p>
     </div>
@@ -42,7 +42,7 @@
 
         window.onload = () => {
             const sImg = document.getElementById('splash-img');
-            sImg.style.display = 'block'; // 이미지 강제 표시
+            sImg.style.display = 'block'; 
 
             setTimeout(() => {
                 document.getElementById('splash').style.opacity = '0';
@@ -123,13 +123,12 @@
                             photo_url = urlData.publicUrl;
                         }
                     }
-                    // 2. 저장 후 'loadData()'를 더 확실하게 호출하여 즉시 반영합니다
                     await _supabase.from('growth_logs').insert([{ 
                         height: parseFloat(height), weight: parseFloat(weight), 
                         photo_url: photo_url, created_at: new Date(date).toISOString() 
                     }]);
                     alert("기록이 완료되었습니다!");
-                    loadData();
+                    loadData(); // 저장 후 즉시 리스트 갱신!
                 }
             });
         };
