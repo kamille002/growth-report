@@ -20,9 +20,9 @@
 </head>
 <body>
     <div id="splash">
-        <img id="splash-img" src="https://pkryjtjsaajalqqzzoyk.supabase.co/storage/v1/object/public/growth-report-illust/family-illust.png" style="width:200px; border-radius:20px; margin-bottom:20px; display:none;" onerror="this.src='https://via.placeholder.com/200?text=Growth+Report'">
+        <img id="splash-img" src="https://pkryjtjsaajalqqzzoyk.supabase.co/storage/v1/object/public/growth-report-illust/family-illust.png" style="width:200px; border-radius:20px; margin-bottom:20px;" onerror="this.src='https://via.placeholder.com/200?text=Growth+Report'">
         <h2 style="color:var(--primary);">성장 보고서</h2>
-        <p style="color:#888;">우리 아이의 기록을 연결 중...</p>
+        <p style="color:#888;">아이의 기록을 불러오고 있습니다...</p>
     </div>
 
     <div class="app-container">
@@ -36,28 +36,114 @@
     </div>
 
     <script>
-        // 사장님이 직접 찾아주신 URL과 Key입니다!
         const SUPABASE_URL = 'https://pkryjtjsaajalqqzzoyk.supabase.co';
         const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InBrcnlqdGpzYWFqYWxxcXp6b3lrIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Njk2MDgwMjYsImV4cCI6MjA4NTE4NDAyNn0.v8_aUSCd_D0Zqtiq5bGSrkhMRHCQI2e-Lyq1i6Mpqjs'; 
         const _supabase = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
         window.onload = () => {
-            const sImg = document.getElementById('splash-img');
-            sImg.style.display = 'block'; 
             loadData();
-
             setTimeout(() => {
-                document.getElementById('splash').style.opacity = '0';
-                setTimeout(() => document.getElementById('splash').style.display = 'none', 800);
-            }, 2500);
+                const splash = document.getElementById('splash');
+                if(splash) {
+                    splash.style.opacity = '0';
+                    setTimeout(() => splash.style.display = 'none', 800);
+                }
+            }, 3000);
         };
 
         async function loadData() {
             try {
+                // 테이블 이름이 growth_logs 가 맞는지 꼭 확인해주세요!
                 const { data, error } = await _supabase.from('growth_logs').select('*').order('created_at', { ascending: true });
                 if (error) throw error;
-                if (data) {
-                    const listDiv = document.getElementById('history-list');
+                
+                const listDiv = document.getElementById('history-list');
+                if (data && data.length > 0) {
                     listDiv.innerHTML = [...data].reverse().map(item => `
                         <div class="history-item">
-                            <img src="${item.
+                            <img src="${item.photo_url || 'https://via.placeholder.com/60'}" class="history-img">
+                            <div style="flex: 1;">
+                                <div style="font-size: 11px; color:#AAA;">${new Date(item.created_at).toLocaleDateString()}</div>
+                                <div style="display: flex; justify-content: space-between; align-items: center;">
+                                    <div style="font-weight:700;">${item.height}cm / ${item.weight}kg</div>
+                                    <div onclick="deleteLog('${item.id}')" style="color:#FF6B6B; font-size:12px; cursor:pointer;">삭제</div>
+                                </div>
+                            </div>
+                        </div>
+                    `).join('');
+                    renderChart(data);
+                } else {
+                    listDiv.innerHTML = "<p style='color:#888; text-align:center;'>기록이 없습니다.</p>";
+                }
+            } catch (e) {
+                console.error("로딩 실패:", e.message);
+                // 에러 발생 시 강제로 스플래시 제거하여 화면 보여주기
+                document.getElementById('splash').style.display = 'none';
+            }
+        }
+
+        async function deleteLog(id) {
+            if (confirm("삭제할까요?")) {
+                await _supabase.from('growth_logs').delete().eq('id', id);
+                loadData();
+            }
+        }
+
+        let myChart;
+        function renderChart(data) {
+            const canvas = document.getElementById('growthChart');
+            if (!canvas) return;
+            const ctx = canvas.getContext('2d');
+            if (myChart) myChart.destroy();
+            myChart = new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels: data.map(d => new Date(d.created_at).toLocaleDateString()),
+                    datasets: [{ label: '키(cm)', data: data.map(d => d.height), borderColor: '#FF6B6B', tension: 0.4 }]
+                }
+            });
+        }
+
+        window.showAddLog = () => {
+            const today = new Date().toISOString().split('T')[0];
+            Swal.fire({
+                title: '쑥쑥 기록하기',
+                html: `
+                    <input type="date" id="logDate" class="swal2-input" value="${today}">
+                    <input type="number" id="height" class="swal2-input" placeholder="키(cm)">
+                    <input type="number" id="weight" class="swal2-input" placeholder="몸무게(kg)">
+                    <input type="file" id="photo" class="swal2-input" accept="image/*">
+                `,
+                confirmButtonText: '저장',
+                showCancelButton: true,
+                preConfirm: () => {
+                    return {
+                        date: document.getElementById('logDate').value,
+                        height: document.getElementById('height').value,
+                        weight: document.getElementById('weight').value,
+                        photo: document.getElementById('photo').files[0]
+                    }
+                }
+            }).then(async (result) => {
+                if (result.isConfirmed) {
+                    const { date, height, weight, photo } = result.value;
+                    let photo_url = '';
+                    if (photo) {
+                        const fileName = `${Date.now()}_img`;
+                        const { data: upData } = await _supabase.storage.from('growth-photos').upload(fileName, photo);
+                        if (upData) {
+                            const { data: urlData } = _supabase.storage.from('growth-photos').getPublicUrl(fileName);
+                            photo_url = urlData.publicUrl;
+                        }
+                    }
+                    await _supabase.from('growth_logs').insert([{ 
+                        height: parseFloat(height), weight: parseFloat(weight), 
+                        photo_url: photo_url, created_at: new Date(date).toISOString() 
+                    }]);
+                    loadData();
+                }
+            });
+        };
+    </script>
+</body>
+</html>
