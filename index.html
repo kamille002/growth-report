@@ -8,41 +8,55 @@
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <style>
-        :root { --primary: #FF6B6B; --bg: #F8F9FA; }
-        body { font-family: -apple-system, sans-serif; background: var(--bg); margin: 0; padding: 20px; }
-        .card { background: white; border-radius: 20px; padding: 20px; box-shadow: 0 4px 12px rgba(0,0,0,0.05); margin-bottom: 20px; }
-        .btn { background: var(--primary); color: white; border: none; width: 100%; padding: 15px; border-radius: 12px; font-size: 16px; font-weight: bold; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 8px; }
-        .history-item { display: flex; align-items: center; gap: 15px; padding: 15px 0; border-bottom: 1px solid #EEE; }
-        .history-img { width: 65px; height: 65px; border-radius: 12px; object-fit: cover; background: #EEE; }
+        :root { --primary: #FF6B6B; --bg: #F0F2F5; }
+        body { font-family: -apple-system, sans-serif; background: var(--bg); margin: 0; display: flex; justify-content: center; }
+        /* PC에서도 모바일처럼 보이게 하는 마법의 박스 */
+        .app-container { width: 100%; max-width: 480px; min-height: 100vh; background: white; padding: 20px; box-sizing: border-box; box-shadow: 0 0 20px rgba(0,0,0,0.05); }
+        .card { background: white; border-radius: 24px; padding: 20px; box-shadow: 0 4px 16px rgba(0,0,0,0.04); margin-bottom: 20px; border: 1px solid #F0F0F0; }
+        .btn { background: var(--primary); color: white; border: none; width: 100%; padding: 16px; border-radius: 16px; font-size: 16px; font-weight: bold; cursor: pointer; transition: 0.2s; }
+        .btn:active { transform: scale(0.98); }
+        .history-item { display: flex; align-items: center; gap: 15px; padding: 15px 0; border-bottom: 1px solid #F5F5F5; }
+        .history-img { width: 60px; height: 60px; border-radius: 14px; object-fit: cover; background: #F8F9FA; }
+        #splash { position:fixed; top:0; left:0; width:100%; height:100%; background:white; display:flex; flex-direction:column; justify-content:center; align-items:center; z-index:2000; }
+        .swal2-input { border-radius: 12px !important; border: 1px solid #DDD !important; font-size: 14px !important; }
     </style>
 </head>
 <body>
-    <div id="splash" style="position:fixed;top:0;left:0;width:100%;height:100%;background:white;display:flex;justify-content:center;align-items:center;z-index:1000;">
-        <h2 style="color:var(--primary);">👣 성장보고서 준비중...</h2>
+    <div id="splash">
+        <img src="https://images.unsplash.com/photo-1511895426328-dc8714191300?auto=format&fit=crop&q=80&w=300" style="width:200px; border-radius:20px; margin-bottom:20px;">
+        <h2 style="color:var(--primary); font-weight:800;">성장 보고서</h2>
+        <p style="color:#888;">우리 아이의 기록을 불러오는 중...</p>
     </div>
 
-    <div class="card">
-        <h3>실시간 대시보드</h3>
-        <canvas id="growthChart"></canvas>
-    </div>
+    <div class="app-container">
+        <header style="display:flex; justify-content:space-between; align-items:center; margin-bottom:20px;">
+            <h2 style="margin:0; font-size:20px;">실시간 대시보드</h2>
+            <div style="font-size:12px; background:#FFEBEB; color:var(--primary); padding:4px 10px; border-radius:20px; font-weight:bold;">LIVE</div>
+        </header>
 
-    <button class="btn" onclick="showAddLog()">📸 오늘의 기록 & 사진 추가</button>
+        <div class="card">
+            <canvas id="growthChart"></canvas>
+        </div>
 
-    <div class="card" style="margin-top:20px;">
-        <h3>최근 기록</h3>
-        <div id="history-list"></div>
+        <button class="btn" onclick="showAddLog()">📸 오늘의 기록 & 사진 추가</button>
+
+        <div style="margin-top:30px;">
+            <h3 style="font-size:18px;">최근 기록</h3>
+            <div id="history-list"></div>
+        </div>
     </div>
 
     <script>
-        const SUPABASE_URL = 'https://kamille002.supabase.co'; // 사장님 URL 확인
+        const SUPABASE_URL = 'https://kamille002.supabase.co';
         const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InBrcnlqdGpzYWFqYWxxcXp6b3lrIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Njk2MDgwMjYsImV4cCI6MjA4NTE4NDAyNn0.v8_aUSCd_D0Zqtiq5bGSrkhMRHCQI2e-Lyq1i6Mpqjs'; 
         const _supabase = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
         window.onload = () => {
             setTimeout(() => {
-                document.getElementById('splash').style.display = 'none';
+                document.getElementById('splash').style.opacity = '0';
+                setTimeout(() => document.getElementById('splash').style.display = 'none', 500);
                 loadData();
-            }, 2000);
+            }, 2500);
         };
 
         async function loadData() {
@@ -51,12 +65,12 @@
                 const listDiv = document.getElementById('history-list');
                 listDiv.innerHTML = [...data].reverse().map(item => `
                     <div class="history-item">
-                        <img src="${item.photo_url || 'https://via.placeholder.com/65'}" class="history-img">
+                        <img src="${item.photo_url || 'https://via.placeholder.com/60'}" class="history-img">
                         <div style="flex: 1;">
-                            <div style="font-size: 11px; color:#888;">${new Date(item.created_at).toLocaleDateString()}</div>
+                            <div style="font-size: 11px; color:#AAA;">${new Date(item.created_at).toLocaleDateString()}</div>
                             <div style="display: flex; justify-content: space-between; align-items: center;">
-                                <div style="font-weight:bold;">${item.height}cm / ${item.weight}kg</div>
-                                <div onclick="deleteLog('${item.id}')" style="color:#ff6b6b; font-size:12px; cursor:pointer;">삭제</div>
+                                <div style="font-weight:700; color:#333;">${item.height}cm / ${item.weight}kg</div>
+                                <div onclick="deleteLog('${item.id}')" style="color:#FF6B6B; font-size:12px; font-weight:bold; cursor:pointer;">삭제</div>
                             </div>
                         </div>
                     </div>
@@ -66,7 +80,7 @@
         }
 
         async function deleteLog(id) {
-            if (confirm("삭제할까요?")) {
+            if (confirm("기록을 삭제하시겠습니까?")) {
                 await _supabase.from('growth_logs').delete().eq('id', id);
                 loadData();
             }
@@ -80,23 +94,42 @@
                 type: 'line',
                 data: {
                     labels: data.map(d => new Date(d.created_at).toLocaleDateString()),
-                    datasets: [{ label: '키(cm)', data: data.map(d => d.height), borderColor: '#FF6B6B', tension: 0.3 }]
-                }
+                    datasets: [{ 
+                        label: '키(cm)', 
+                        data: data.map(d => d.height), 
+                        borderColor: '#FF6B6B', 
+                        backgroundColor: 'rgba(255,107,107,0.1)',
+                        fill: true,
+                        tension: 0.4,
+                        borderWidth: 3,
+                        pointRadius: 4,
+                        pointBackgroundColor: '#FFF',
+                        pointBorderColor: '#FF6B6B'
+                    }]
+                },
+                options: { plugins: { legend: { display: false } }, scales: { y: { beginAtZero: false } } }
             });
         }
 
         window.showAddLog = () => {
             const today = new Date().toISOString().split('T')[0];
             Swal.fire({
-                title: '기록 추가',
+                title: '쑥쑥 기록하기',
                 html: `
-                    <input type="date" id="logDate" class="swal2-input" value="${today}">
-                    <input type="number" id="height" class="swal2-input" placeholder="키(cm)">
-                    <input type="number" id="weight" class="swal2-input" placeholder="몸무게(kg)">
-                    <input type="file" id="photo" class="swal2-input" accept="image/*">
+                    <div style="text-align:left; font-size:14px; margin-bottom:5px; color:#666;">날짜</div>
+                    <input type="date" id="logDate" class="swal2-input" value="${today}" style="margin-top:0;">
+                    <div style="text-align:left; font-size:14px; margin-bottom:5px; margin-top:15px; color:#666;">성장 지표</div>
+                    <div style="display:flex; gap:10px;">
+                        <input type="number" id="height" class="swal2-input" placeholder="키(cm)" style="margin:0;">
+                        <input type="number" id="weight" class="swal2-input" placeholder="몸무게(kg)" style="margin:0;">
+                    </div>
+                    <div style="text-align:left; font-size:14px; margin-bottom:5px; margin-top:15px; color:#666;">사진 첨부</div>
+                    <input type="file" id="photo" class="swal2-input" accept="image/*" style="margin-top:0; font-size:12px;">
                 `,
-                confirmButtonText: '저장',
+                confirmButtonText: '기록 저장',
+                confirmButtonColor: '#FF6B6B',
                 showCancelButton: true,
+                cancelButtonText: '취소',
                 preConfirm: () => {
                     return {
                         date: document.getElementById('logDate').value,
