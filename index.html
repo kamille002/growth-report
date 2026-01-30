@@ -107,10 +107,10 @@
         };
 
         async function loadData() {
-            const { data } = await _supabase.from('growth_logs').select('*').order('created_at', { ascending: true });
-            if (data) {
-                const listDiv = document.getElementById('history-list');
-                listDiv.innerHTML = [...data].reverse().map(item => `
+        const { data } = await _supabase.from('growth_logs').select('*').order('created_at', { ascending: true });
+        if (data) {
+            const listDiv = document.getElementById('history-list');
+            listDiv.innerHTML = [...data].reverse().map(item => `
                 <div class="history-item">
                     <img src="${item.photo_url || 'https://via.placeholder.com/65'}" class="history-img">
                     <div style="flex: 1;">
@@ -135,7 +135,6 @@
             }
         }
     }
-}
                 `).join('');
                 renderChart(data);
             }
