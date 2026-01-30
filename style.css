@@ -1,0 +1,10 @@
+:root { --primary: #FF6B6B; --bg: #F8F9FA; --nav-bg: #FFFFFF; }
+body { font-family: -apple-system, sans-serif; background: var(--bg); margin: 0; display: flex; justify-content: center; overflow-x: hidden; }
+.app-container { width: 100%; max-width: 480px; min-height: 100vh; background: white; position: relative; padding-bottom: 80px; box-sizing: border-box; }
+.bottom-nav { position: fixed; bottom: 0; width: 100%; max-width: 480px; height: 70px; background: var(--nav-bg); display: flex; justify-content: space-around; align-items: center; border-top: 1px solid #EEE; z-index: 1000; }
+.nav-item { display: flex; flex-direction: column; align-items: center; cursor: pointer; color: #BBB; }
+.nav-item.active { color: var(--primary); }
+.app-section { display: none; padding: 20px; animation: fadeIn 0.4s; }
+.app-section.active { display: block; }
+@keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+/* ...기타 스타일들... */
