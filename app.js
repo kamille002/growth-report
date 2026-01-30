@@ -19,16 +19,18 @@ function switchTab(tabId) {
 
 // 2. 초기 구동
 window.onload = () => {
-    // 1. 뒤에서 조용히 데이터를 불러옵니다.
-    if (typeof loadHistory === 'function') loadHistory(); 
-    
-    // 2. 스플래시를 2.5초 동안 강제로 보여준 뒤에 치웁니다.
+    // 뒤에서 조용히 데이터를 불러옵니다.
+    if (typeof loadHistory === 'function') loadHistory();
+
+    // 스플래시를 2.5초 동안 보여준 뒤 부드럽게 치웁니다.
     setTimeout(() => {
         const splash = document.getElementById('splash');
-        if(splash) {
+        if (splash) {
             splash.style.opacity = '0';
-            // 부드럽게 사라지는 효과 (0.8초)
-            setTimeout(() => splash.style.display = 'none', 800);
+            // 0.8초 동안 서서히 사라지는 효과
+            setTimeout(() => {
+                splash.style.display = 'none';
+            }, 800);
         }
     }, 2500); 
 };
