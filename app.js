@@ -19,20 +19,22 @@ function switchTab(tabId) {
 
 // 2. 초기 구동
 window.onload = () => {
-    // 뒤에서 조용히 데이터를 불러옵니다.
+    // 뒤에서 조용히 데이터를 로드합니다.
     if (typeof loadHistory === 'function') loadHistory();
 
-    // 스플래시를 2.5초 동안 보여준 뒤 부드럽게 치웁니다.
+    // 스플래시 화면을 2.5초 동안 보여준 뒤 부드럽게 치웁니다.
     setTimeout(() => {
-        const splash = document.getElementById('splash');
+        const splash = document.getElementById('splash-screen'); // 이름 수정됨
         if (splash) {
+            splash.style.transition = 'opacity 0.8s ease';
             splash.style.opacity = '0';
-            // 0.8초 동안 서서히 사라지는 효과
+            
+            // 0.8초 동안 서서히 사라지는 효과 후 완전히 제거
             setTimeout(() => {
                 splash.style.display = 'none';
             }, 800);
         }
-    }, 2500); 
+    }, 2500);
 };
 
 // 3. 오늘의 성장 기록 버튼 활성화 (window에 명시적으로 등록)
