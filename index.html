@@ -1,53 +1,66 @@
-<section id="map" class="app-section">
-    <div style="display:flex; justify-content:space-between; align-items:center;">
-        <h2 style="font-size:18px;">안심 병원/약국 찾기</h2>
-        <span style="font-size:12px; color:var(--primary);">📍 현재 위치 기준</span>
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>우리아이 성장보고서</title>
+    <link rel="stylesheet" href="style.css">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+</head>
+<body>
+    <div id="splash">
+        <img src="https://pkryjtjsaajalqqzzoyk.supabase.co/storage/v1/object/public/growth-report-illust/family-illust.png" style="width:350px; border-radius:20px; margin-bottom:20px;">
+        <h2 style="color:var(--primary); font-size: 20px;">아이의 내일이 더 기대되는 시간</h2>
+        <p style="color:#888;">우리아이 성장보고서</p>
     </div>
-    <div id="google-map" class="card" style="height:400px; background:#eee; padding:0; overflow:hidden;">
-        <div style="display:flex; flex-direction:column; align-items:center; justify-content:center; height:100%; color:#888;">
-            <p style="font-size:30px;">🗺️</p>
-            <p>지도를 불러오는 중입니다...</p>
-        </div>
-    </div>
-    <div style="display:grid; grid-template-columns: 1fr 1fr; gap:10px;">
-        <button class="btn" style="background:#4285F4;" onclick="findNearby('소아과')">🏥 주변 소아과</button>
-        <button class="btn" style="background:#34A853;" onclick="findNearby('약국')">💊 주변 약국</button>
-    </div>
-</section>
 
-<script src="app.js"></script>
-<script src="log.js"></script>
-<script src="map.js"></script> ```
+    <div class="app-container">
+        <section id="home" class="app-section active">
+            <h2 style="font-size:18px;">실시간 대시보드</h2>
+            <div class="card"><canvas id="growthChart"></canvas></div>
+            <button class="btn" onclick="showAddLog()">📸 오늘의 성장 기록</button>
+            <div id="history-list" style="margin-top:30px;"></div>
+        </section>
 
-#### **2단계: `map.js` 신규 파일 생성 (지도 컨트롤러)**
-깃허브에서 **`map.js`** 파일을 새로 만들고 아래 기초 코드를 넣으세요. 사장님이 나중에 구글 지도 API 키를 넣으시면 바로 실시간 지도가 뜰 수 있게 설계했습니다.
+        <section id="log" class="app-section">
+            <h2 style="font-size:18px;">데일리 로그</h2>
+            <p style="color:#888; text-align:center; padding:50px 0;">베이비타임의 강점을 녹여낼 구역입니다.</p>
+        </section>
 
-```javascript
-// 병원/약국 찾기 전용 모듈입니다.
-window.findNearby = (type) => {
-    Swal.fire({
-        title: `${type} 검색 중`,
-        text: '현재 위치를 기반으로 주변 시설을 찾고 있습니다.',
-        icon: 'info',
-        timer: 1500,
-        showConfirmButton: false
-    });
-    
-    // 실제 구글 맵 API와 연동될 핵심 로직 자리
-    console.log(`${type} 위치 검색 시작...`);
-    
-    // 임시 안내 (나중에 실제 지도로 교체)
-    setTimeout(() => {
-        const mapDiv = document.getElementById('google-map');
-        mapDiv.innerHTML = `
-            <div style="padding:20px; text-align:left; font-size:14px;">
-                <p><b>✨ 추천 ${type}</b></p>
-                <ul style="line-height:1.8;">
-                    <li>하남 안심 ${type} (800m)</li>
-                    <li>강동 미사 ${type} (1.2km)</li>
-                </ul>
-                <p style="font-size:12px; color:#888;">※ 구글 맵 연동 시 실시간 위치가 표시됩니다.</p>
+        <section id="map" class="app-section">
+            <div style="display:flex; justify-content:space-between; align-items:center;">
+                <h2 style="font-size:18px;">안심 병원/약국 찾기</h2>
+                <span style="font-size:12px; color:var(--primary);">📍 현재 위치 기준</span>
             </div>
-        `;
-    }, 1000);
-};
+            <div id="google-map" class="card" style="height:400px; background:#eee; padding:0; overflow:hidden; display:flex; align-items:center; justify-content:center; color:#888;">
+                지도를 불러오는 중입니다...
+            </div>
+            <div style="display:grid; grid-template-columns: 1fr 1fr; gap:10px;">
+                <button class="btn" style="background:#4285F4;" onclick="findNearby('소아과')">🏥 주변 소아과</button>
+                <button class="btn" style="background:#34A853;" onclick="findNearby('약국')">💊 주변 약국</button>
+            </div>
+        </section>
+
+        <section id="ai" class="app-section">
+            <h2 style="font-size:18px;">AI 육아 튜터링</h2>
+            <div class="card" style="min-height:200px; border-left: 5px solid var(--primary);">
+                <p style="font-weight:bold; color:var(--primary);">🤖 AI 분석 리포트</p>
+                <p style="font-size:14px; color:#444;">데이터를 분석하여 맞춤 가이드를 생성합니다.</p>
+            </div>
+        </section>
+
+        <nav class="bottom-nav">
+            <div class="nav-item active" onclick="switchTab('home')">🏠<br><span class="nav-label">홈</span></div>
+            <div class="nav-item" onclick="switchTab('log')">📝<br><span class="nav-label">기록</span></div>
+            <div class="nav-item" onclick="switchTab('map')">📍<br><span class="nav-label">병원찾기</span></div>
+            <div class="nav-item" onclick="switchTab('ai')">🤖<br><span class="nav-label">AI상담</span></div>
+        </nav>
+    </div>
+
+    <script src="app.js"></script>
+    <script src="log.js"></script>
+    <script src="map.js"></script>
+</body>
+</html>
