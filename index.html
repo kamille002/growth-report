@@ -10,32 +10,38 @@
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 </head>
 <body>
-    <header>
-  <h1>Growth Report</h1>
-  <div class="ai-message">
-    "재욱이가 오늘 평소보다 <strong>1시간 더</strong> 잤어요. <br/>성장에 아주 좋은 신호입니다."
+   <div id="splash" style="position:fixed; top:0; left:0; width:100%; height:100%; background:#fff; display:flex; flex-direction:column; align-items:center; justify-content:center; z-index:9999; transition: opacity 1s ease-out;">
+    <img src="https://pkryjtjsaajalqqzzoyk.supabase.co/storage/v1/object/public/growth-report-illust/family-illust.png" style="width:280px; margin-bottom:20px; border-radius:20px;">
+    <h2 style="font-weight:300; letter-spacing:0.2em; color:#4a423d;">ONDOLCARE</h2>
+    <p style="font-size:12px; color:#999; margin-top:10px;">아이의 내일이 더 기대되는 시간</p>
   </div>
-</header>
 
-<section class="quick-log">
-  <button class="log-btn" onclick="saveLog('Milk')">Milk</button>
-  <button class="log-btn" onclick="saveLog('Diaper')">Diaper</button>
-  <button class="log-btn" onclick="saveLog('Sleep')">Sleep</button>
-</section>
+  <header>
+    <h1>Growth Report</h1>
+    <div class="ai-message">
+      "재욱이가 오늘 평소보다 <strong>1시간 더</strong> 잤어요. <br/>성장에 아주 좋은 신호입니다."
+    </div>
+  </header>
 
-<section class="safe-zone">
-  <div style="display: flex; justify-content: space-between; align-items: baseline; margin-bottom: 15px;">
-    <h2 style="font-style: italic; font-weight: 500;">Safe Zone</h2>
-    <span style="font-size: 10px; border-bottom: 1px solid #1a1a1a;">VIEW ALL</span>
-  </div>
-  <div id="map" class="map-container">
-    내 주변 병원/약국 지도를 불러오는 중...
-  </div>
-</section>
+  <section class="quick-log">
+    <button class="log-btn" onclick="saveLog('Milk')">MILK</button>
+    <button class="log-btn" onclick="saveLog('Diaper')">DIAPER</button>
+    <button class="log-btn" onclick="saveLog('Sleep')">SLEEP</button>
+  </section>
 
-<footer style="margin-top: 100px; padding-bottom: 50px; text-align: center; opacity: 0.3; font-size: 9px; letter-spacing: 0.4em;">
-  ONDOLCARE BY CHO YOUNG BOK
-</footer>
+  <section class="safe-zone">
+    <div style="display: flex; justify-content: space-between; align-items: baseline; margin-bottom: 15px;">
+      <h2 style="font-style: italic; font-weight: 500;">Safe Zone</h2>
+      <span style="font-size: 10px; border-bottom: 1px solid #4a423d;">VIEW ALL</span>
+    </div>
+    <div id="map" class="map-container">
+      내 주변 병원/약국 지도를 불러오는 중...
+    </div>
+  </section>
+
+  <footer style="margin-top: 100px; padding-bottom: 50px; text-align: center; opacity: 0.3; font-size: 9px; letter-spacing: 0.4em;">
+    ONDOLCARE BY CHO YOUNG BOK
+  </footer>
 
     <script src="app.js"></script>
     <script src="log.js"></script>
